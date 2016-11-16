@@ -1,0 +1,33 @@
+@CHARSET "UTF-8";
+
+body {
+	background-color: black;
+}
+
+#weatherData {
+	max-width: 960px;
+	background: black;
+}
+
+#map {
+	width: 960px;
+	height: 400px;
+	background: black;
+}
+
+
+h1 {
+	font-size: 22px;
+	color: #00FF00;
+}
+
+h3 {
+	font-size: 18px;
+	color: #00FF00;
+}
+
+p {
+	font-size: 16px;
+	font-family: monospace;
+	color: #00FF00;
+}

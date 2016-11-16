@@ -1,0 +1,123 @@
+{
+    "feed": {
+        "$": {
+            "xmlns": "http://www.w3.org/2005/Atom",
+            "xmlns:cap": "urn:oasis:names:tc:emergency:cap:1.1",
+            "xmlns:ha": "http://www.alerting.net/namespace/index_1.0"
+        },
+        "author": [
+            {
+                "name": [
+                    "w-nws.webmaster@noaa.gov"
+                ]
+            }
+        ],
+        "entry": [
+            {
+                "author": [
+                    {
+                        "name": [
+                            "w-nws.webmaster@noaa.gov"
+                        ]
+                    }
+                ],
+                "cap:areaDesc": [
+                    "Buffalo; Crawford; Grant; La Crosse; Richland; Trempealeau; Vernon"
+                ],
+                "cap:category": [
+                    "Met"
+                ],
+                "cap:certainty": [
+                    "Likely"
+                ],
+                "cap:effective": [
+                    "2016-10-21T04:15:00-05:00"
+                ],
+                "cap:event": [
+                    "Frost Advisory"
+                ],
+                "cap:expires": [
+                    "2016-10-21T08:00:00-05:00"
+                ],
+                "cap:geocode": [
+                    {
+                        "value": [
+                            "055011 055023 055043 055063 055103 055121 055123",
+                            "WIZ032 WIZ033 WIZ041 WIZ053 WIZ054 WIZ055 WIZ061"
+                        ],
+                        "valueName": [
+                            "FIPS6",
+                            "UGC"
+                        ]
+                    }
+                ],
+                "cap:msgType": [
+                    "Alert"
+                ],
+                "cap:parameter": [
+                    {
+                        "value": [
+                            "/O.CON.KARX.FR.Y.0010.000000T0000Z-161021T1300Z/"
+                        ],
+                        "valueName": [
+                            "VTEC"
+                        ]
+                    }
+                ],
+                "cap:polygon": [
+                    ""
+                ],
+                "cap:severity": [
+                    "Minor"
+                ],
+                "cap:status": [
+                    "Actual"
+                ],
+                "cap:urgency": [
+                    "Expected"
+                ],
+                "id": [
+                    "https://alerts.weather.gov/cap/wwacapget.php?x=WI12561A801EAC.FrostAdvisory.12561A80B510WI.ARXNPWARX.f58188c9ca848b512bc095272a4e3ee0"
+                ],
+                "link": [
+                    {
+                        "$": {
+                            "href": "https://alerts.weather.gov/cap/wwacapget.php?x=WI12561A801EAC.FrostAdvisory.12561A80B510WI.ARXNPWARX.f58188c9ca848b512bc095272a4e3ee0"
+                        }
+                    }
+                ],
+                "published": [
+                    "2016-10-21T04:15:00-05:00"
+                ],
+                "summary": [
+                    "...AREAS OF FROST THROUGH EARLY THIS MORNING... .AREAS OF FROST WILL BE SEEN THROUGH EARLY THIS MORNING AS TEMPERATURES HOVER IN THE LOWER TO MIDDLE 30S. ...FROST ADVISORY REMAINS IN EFFECT UNTIL 8 AM CDT THIS MORNING... * TEMPERATURES THROUGH 8 AM WILL BE IN THE LOWER TO MIDDLE 30S LEADING TO AREAS OF FROST."
+                ],
+                "title": [
+                    "Frost Advisory issued October 21 at 4:15AM CDT until October 21 at 8:00AM CDT by NWS"
+                ],
+                "updated": [
+                    "2016-10-21T04:15:00-05:00"
+                ]
+            }
+        ],
+        "generator": [
+            "NWS CAP Server"
+        ],
+        "id": [
+            "https://alerts.weather.gov/cap/wwaatmget.php?x=WIC103&y=0"
+        ],
+        "link": [
+            {
+                "$": {
+                    "href": "https://alerts.weather.gov/cap/wwaatmget.php?x=WIC103&y=0"
+                }
+            }
+        ],
+        "title": [
+            "Current Watches, Warnings and Advisories for Richland (WIC103) Wisconsin Issued by the National Weather Service"
+        ],
+        "updated": [
+            "2016-10-21T04:15:00-05:00"
+        ]
+    }
+}
