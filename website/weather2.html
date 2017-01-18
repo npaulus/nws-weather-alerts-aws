@@ -1,0 +1,155 @@
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1">
+<title>Weather Alerts</title>
+<script type="text/javascript"
+      src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAFzR4XGDNaVJRt52d3iaivONmPd5b-ntg">
+    </script>
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.1/jquery.min.js"></script>
+    <script type="text/javascript" src="async.min.js"></script>
+<script>
+$(document).ready(function(){
+    var map = new Object(); // try moving this outside of the document ready
+    
+    if(navigator && navigator.geolocation){
+		navigator.geolocation.getCurrentPosition(success, error, {timeout:50000});
+	} 
+	
+  
+	
+});
+
+function initializeMap(lat, lon) {
+	
+	var radarMapType = new google.maps.ImageMapType({
+		 getTileUrl: function(tile, zoom) {
+		 return "https://mesonet.agron.iastate.edu/cache/tile.py/1.0.0/nexrad-n0q-900913/" + zoom + "/" + tile.x + "/" + tile.y +".png?"+ (new Date()).getTime();
+		 },
+		 tileSize: new google.maps.Size(256, 256),
+		 opacity:0.30,
+		 name : 'Radar',
+		 isPng: true
+		 }); 
+
+	var myPosition = new google.maps.LatLng(lat, lon);
+	
+	var mapOptions = {
+			 center : myPosition,
+			 zoom : 10,
+	         mapTypeId: google.maps.MapTypeId.ROADMAP	         
+	        };
+	
+	var polygonOpts = [];
+	
+	map = new google.maps.Map(document.getElementById("map"),
+	            mapOptions);	
+			
+	map.overlayMapTypes.push(null);
+	map.overlayMapTypes.setAt("0", radarMapType);
+	
+    var marker = new google.maps.Marker({
+		position: myPosition,
+	    map: map,
+	    title:"Your Location"
+	 });
+}
+
+function success(location) {
+		
+	var longitude = location.coords.longitude;
+	var latitude = location.coords.latitude;
+    initializeMap(41.2385, -89.2847);
+    
+    async.waterfall([
+        async.apply(getFipsCode, 41.2385, -89.2847),
+        getWeatherAlerts,
+        getWeatherAlertDetails
+    ], function (err, result) {
+        console.log("Results: " + result);
+        console.log("Error: " + err);
+    });
+    
+    
+//	var longitude = -87.3016;
+//	var latitude = 41.4897;
+    
+   }
+
+function error(err){
+	
+	$("#weatherData").html("<h1>Oops!</h1><p>It looks like your browser doesn't support geolocation. For best results please use" +
+	" a mobile phone and share your location when prompted.</p>");
+}
+    
+var getFipsCode = function(lat, lon, callback){
+ $.get('https://rc6wirove4.execute-api.us-east-1.amazonaws.com/stage',
+         {latitude : lat,
+          longitude : lon},
+         function (fips){       
+            console.log("Retrieved fips is: " + JSON.stringify(fips));
+     return callback(null, fips);
+   });
+};
+
+var getWeatherAlerts = function(fips, callback){
+    console.log("FIPS code in getWeatherAlerts: " + JSON.stringify(fips));
+    $.get('https://rc6wirove4.execute-api.us-east-1.amazonaws.com/stage/alerts',
+                      {fips : "ILC155"},
+        function (alertsData){
+        console.log("Results for alerts:");
+            console.log(JSON.stringify(alertsData));
+        return callback(null, alertsData);
+        });
+};
+
+var getWeatherAlertDetails = function(alertsData, callback){
+//    console.log("Alerts in alert method: " + JSON.stringify(alerts));
+    var results = "";
+    var alerts = alertsData.alerts;
+    for(alert in alerts){
+        console.log("JSON Alert: " + JSON.stringify(alert));
+        console.log("URL: " + alerts[alert].url);
+        $.get('https://rc6wirove4.execute-api.us-east-1.amazonaws.com/stage/alertdetails',
+              {url: alerts[alert].url.toString()},
+              function(weatherData){
+                console.log("Weather alert details: " + JSON.stringify(weatherData));
+                results += "<h3>" + weatherData.headline.toString() + "</h3>"; //start putting together alert display here
+                var color = "#FF0000"; //the default color is gray
+                if(weatherData.polygon.length > 1){
+                    var polyInfoPaths = new google.maps.MVCArray();
+                    for(var j = 0; j < weatherData.polygon.length; j++){						
+                        var points = weatherData.polygon[j].split(",");
+                        polyInfoPaths.push(new google.maps.LatLng(points[0], points[1]));						
+                    }
+                    var polygonOptions = new google.maps.Polygon({
+                        paths : polyInfoPaths,
+                        fillColor : color,
+                        fillOpacity : 0.35,			
+                        strokeColor : color,
+                        strokeOpacity : 0.35,
+                        strokeWeight : 2			
+                    });
+                    polygonOptions.setMap(map); //this sadly didn't work, will have to figure out another way
+                }
+                return callback(null); //can't have this here if there are multiple need to replace with async.each
+            });
+    }
+    
+    
+}
+
+</script>
+<link media="only screen and (max-device-width: 480px)" href="mobile.css" type="text/css" rel="stylesheet"   />
+<link rel="stylesheet" type="text/css" href="weather.css" media="only screen and (min-device-width: 481px)" />
+<link rel="apple-touch-icon" href="alert.png" />
+<link rel="shortcut icon" href="alert.ico" />
+<link rel="icon" href="alert.ico" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=2.0, user-scalable=yes" />
+</head>
+<body>
+<div id="map"></div>
+<div id="weatherData" style="display: block">
+<p>Retrieving weather alert data for your location....</p>
+</div>
+</body>
+</html>

@@ -2,7 +2,7 @@
   "name": "weather-data-lambda",
   "version": "0.0.1",
   "description": "Gets weather data from national weather service based on FIPS code. ",
-  "main": "weather-data-lambda.js",
+  "main": "weather-alerts-lambda.js",
   "author": "Nate Paulus",
   "dependencies": {
     "aws-sdk": "^2.2.17",
