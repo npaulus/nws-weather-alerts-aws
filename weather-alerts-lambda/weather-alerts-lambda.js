@@ -27,6 +27,7 @@ exports.handler = (event, context) => {
           result.alerts = [];
           for(var index = 0; index < jsonResult.feed.entry.length; index++){
             result.alerts[index] = new Object();
+            result.alerts[index].feedTitle = jsonResult.feed.title;
             result.alerts[index].url = jsonResult.feed.entry[index].id;
             result.alerts[index].title = jsonResult.feed.entry[index].title;
             result.alerts[index].summary = jsonResult.feed.entry[index].summary;

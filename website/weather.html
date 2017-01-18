@@ -8,14 +8,13 @@
 <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.1/jquery.min.js"></script>
     <script type="text/javascript" src="async.min.js"></script>
 <script>
+    
 $(document).ready(function(){
-    var map = new Object(); // try moving this outside of the document ready
+    var map = new Object();
     
     if(navigator && navigator.geolocation){
 		navigator.geolocation.getCurrentPosition(success, error, {timeout:50000});
 	} 
-	
-  
 	
 });
 
@@ -52,28 +51,24 @@ function initializeMap(lat, lon) {
 	    map: map,
 	    title:"Your Location"
 	 });
+    
 }
 
 function success(location) {
 		
 	var longitude = location.coords.longitude;
 	var latitude = location.coords.latitude;
-    initializeMap(41.2385, -89.2847);
+    initializeMap(latitude, longitude);
     
     async.waterfall([
-        async.apply(getFipsCode, 41.2385, -89.2847),
+        async.apply(getFipsCode, latitude, longitude),
         getWeatherAlerts,
         getWeatherAlertDetails
     ], function (err, result) {
         console.log("Results: " + result);
         console.log("Error: " + err);
     });
-    
-    
-//	var longitude = -87.3016;
-//	var latitude = 41.4897;
-    
-   }
+}
 
 function error(err){
 	
@@ -87,38 +82,61 @@ var getFipsCode = function(lat, lon, callback){
           longitude : lon},
          function (fips){       
             console.log("Retrieved fips is: " + JSON.stringify(fips));
-     return callback(null, fips);
-   });
+            if(fips.errorMessage){
+                $("#weatherData").html("<h1>Oops!</h1><p>It looks like we had an error reaching our sources. Please try again.</p>");
+                return callback(fips.errorMessage.toString());
+            }
+            return callback(null, fips);
+         }
+    );
 };
 
 var getWeatherAlerts = function(fips, callback){
-    console.log("FIPS code in getWeatherAlerts: " + JSON.stringify(fips));
+//    console.log("FIPS code in getWeatherAlerts: " + JSON.stringify(fips));
     $.get('https://rc6wirove4.execute-api.us-east-1.amazonaws.com/stage/alerts',
-                      {fips : "ILC155"},
+                      {fips : fips},
         function (alertsData){
-        console.log("Results for alerts:");
-            console.log(JSON.stringify(alertsData));
+        if("There are no active watches, warnings or advisories" == alertsData.alerts[0].title){
+            $("#weatherData").html("<h1>"+alertsData.alerts[0].feedTitle+"</h1><p>"+alertsData.alerts[0].title+"</p>");
+            return callback("No alerts");
+        } else if(alertsData.errorMessage){
+            $("#weatherData").html("<h1>Oops!</h1><p>It looks like we had an error reaching our sources. Please try again.</p>");
+            return callback(alertsData.errorMessage.toString());
+        }
+        $("#weatherData").html("<h1>"+alertsData.alerts[0].feedTitle+"</h1>");
         return callback(null, alertsData);
         });
 };
 
 var getWeatherAlertDetails = function(alertsData, callback){
-//    console.log("Alerts in alert method: " + JSON.stringify(alerts));
-    var results = "";
     var alerts = alertsData.alerts;
-    for(alert in alerts){
-        console.log("JSON Alert: " + JSON.stringify(alert));
-        console.log("URL: " + alerts[alert].url);
+    
+    async.each(alerts, function(alert, callback){
+        var results = "";
         $.get('https://rc6wirove4.execute-api.us-east-1.amazonaws.com/stage/alertdetails',
-              {url: alerts[alert].url.toString()},
+              {url: alert.url.toString()},
               function(weatherData){
-                console.log("Weather alert details: " + JSON.stringify(weatherData));
                 results += "<h3>" + weatherData.headline.toString() + "</h3>"; //start putting together alert display here
-                var color = "#FF0000"; //the default color is gray
-                if(weatherData.polygon.length > 1){
+                results += "<p>" + weatherData.description.toString() + "/<p>";
+                results += "<p>" + weatherData.instructions.toString() + "</p>";
+                var phenomena = weatherData.phenomena.toString();
+                var color = "#A9A9A9"; //the default color is light grey
+                
+                if(phenomena == "FF"){ //light green for flash flood
+					color = "#33FF33";
+				} else if(phenomena == "SV"){ //yellow for severe thunderstorm
+					color = "#EEEE00"; 
+				} else if(phenomena == "TO"){ //red for tornado
+					color = "FF0000";
+				} else if(phenomena == "FL"){ //dark green for flood
+                    color = "#32A532";
+                }
+            
+                var polygonPoints = weatherData.polygon.toString().split(" ");
+                if(polygonPoints.length > 1){
                     var polyInfoPaths = new google.maps.MVCArray();
-                    for(var j = 0; j < weatherData.polygon.length; j++){						
-                        var points = weatherData.polygon[j].split(",");
+                    for(var j = 0; j < polygonPoints.length; j++){						
+                        var points = polygonPoints[j].split(",");
                         polyInfoPaths.push(new google.maps.LatLng(points[0], points[1]));						
                     }
                     var polygonOptions = new google.maps.Polygon({
@@ -129,12 +147,25 @@ var getWeatherAlertDetails = function(alertsData, callback){
                         strokeOpacity : 0.35,
                         strokeWeight : 2			
                     });
-                    polygonOptions.setMap(map); //this sadly didn't work, will have to figure out another way
+                    polygonOptions.setMap(map);
                 }
-                return callback(null); //can't have this here if there are multiple need to replace with async.each
+                if($("#loading").is(":visible")){
+                    $("#loading").hide();
+                    $("#weatherData").append(results);
+                } else {
+                    $("#weatherData").append(results);
+                }
+                return callback(); 
             });
-    }
-    
+        },
+        function(err){
+            if(err){
+                console.log("An error occurred:");
+                console.log(err);
+            } else {
+                console.log("Alert details processed successfully.");
+            }
+        });
     
 }
 
@@ -149,7 +180,7 @@ var getWeatherAlertDetails = function(alertsData, callback){
 <body>
 <div id="map"></div>
 <div id="weatherData" style="display: block">
-<p>Retrieving weather alert data for your location....</p>
+<p id="loading">Retrieving weather alert data for your location....</p>
 </div>
 </body>
 </html>

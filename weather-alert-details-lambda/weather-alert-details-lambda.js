@@ -31,8 +31,20 @@ exports.handler = (event, context) => {
         alertDetails.polygon = result.alert.info[0].area[0].polygon;
         alertDetails.description = result.alert.info[0].description;
         alertDetails.instructions = result.alert.info[0].instruction;
-    console.log(JSON.stringify(result));
-    context.succeed(alertDetails);
+        alertDetails.phenomena = "";
+        var parameters = result.alert.info[0].parameter;
+        //get vtec phenomena if it is a warning to determine type of warning
+        for(param in parameters){
+            console.log("Param is: " + param);
+            if(parameters[param].valueName == "VTEC"){
+                var vtec = parameters[param].value.toString().split(".");
+                if("W" == vtec[4]){
+                    alertDetails.phenomena = vtec[3];
+                }
+            }
+        }
+        console.log(JSON.stringify(result));
+        context.succeed(alertDetails);
       });
     });
     
