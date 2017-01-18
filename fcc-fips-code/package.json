@@ -1,12 +1,11 @@
 {
-  "name": "weather-alert-details-lambda",
+  "name": "fcc-fips-code",
   "version": "0.0.1",
-  "description": "Retrieves the alert details from the NWS based on their URL.",
-  "main": "weather-alert-details-lambda.js",
+  "description": "Gets the fips code for a given set of GPS coordinates.",
+  "main": "fcc-fips-code.js",
   "author": "Nate Paulus",
   "dependencies": {
-    "aws-sdk": "^2.2.17",
-    "xml2js": "0.4.17",
+    "aws-sdk": "^2.7.21",
     "aws-lambda-toolkit": "0.2.0",
     "gulp": "^3.9.0"
   },
