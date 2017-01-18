@@ -1,4 +1,4 @@
-var http = require('http');
+var http = require('https');
 
 exports.handler = function(event, context){
     console.log("Event is: " + JSON.stringify(event));
@@ -9,11 +9,11 @@ exports.handler = function(event, context){
 	var options = {
     host : 'data.fcc.gov', // here only the domain name
     // (no http/https !)
-    port : 80,
+    port : 443,
     path : '/api/block/find?format=json&latitude='+event.params.querystring.latitude+'&longitude='+event.params.querystring.longitude, // the rest of the url with parameters if needed
     method : 'GET' // do GET
     };
-console.log("Here is the path: " +options.path);
+    console.log("Here is the path: " +options.path);
   
     var req = http.request(options, function(res) {
     res.setEncoding('utf-8');
