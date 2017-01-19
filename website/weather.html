@@ -13,7 +13,7 @@ $(document).ready(function(){
     var map = new Object();
     
     if(navigator && navigator.geolocation){
-		navigator.geolocation.getCurrentPosition(success, error, {timeout:50000});
+		navigator.geolocation.getCurrentPosition(success, error, {enableHighAccuracy:true, maximumAge: 600000, timeout: 25000});
 	} 
 	
 });
