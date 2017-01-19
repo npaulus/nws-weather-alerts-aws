@@ -71,9 +71,12 @@ function success(location) {
 }
 
 function error(err){
-	
+	$("#map").hide();
 	$("#weatherData").html("<h1>Oops!</h1><p>It looks like your browser doesn't support geolocation. For best results please use" +
-	" a mobile phone and share your location when prompted.</p>");
+	" a mobile phone and share your location when prompted. Android users may need to have their phone location services set to enable High Accuracy. Error is \""+err.message+"\"</p>");
+    console.log("Geolocation error is: ");
+    console.log(err.message);
+                
 }
     
 var getFipsCode = function(lat, lon, callback){
