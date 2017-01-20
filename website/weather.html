@@ -2,18 +2,20 @@
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1">
 <title>Weather Alerts</title>
-<script type="text/javascript"
+
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.1/jquery.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
+    <script type="text/javascript" src="async.min.js"></script>
+    <script type="text/javascript"
       src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAFzR4XGDNaVJRt52d3iaivONmPd5b-ntg">
     </script>
-<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.1/jquery.min.js"></script>
-    <script type="text/javascript" src="async.min.js"></script>
 <script>
     
 $(document).ready(function(){
     var map = new Object();
     
     if(navigator && navigator.geolocation){
-		navigator.geolocation.getCurrentPosition(success, error, {enableHighAccuracy:true, maximumAge: 600000, timeout: 25000});
+		navigator.geolocation.getCurrentPosition(success, error, { maximumAge: 600000, timeout: 25000});
 	} 
 	
 });
@@ -58,6 +60,7 @@ function success(location) {
 		
 	var longitude = location.coords.longitude;
 	var latitude = location.coords.latitude;
+
     initializeMap(latitude, longitude);
     
     async.waterfall([
@@ -86,6 +89,7 @@ var getFipsCode = function(lat, lon, callback){
          function (fips){       
             console.log("Retrieved fips is: " + JSON.stringify(fips));
             if(fips.errorMessage){
+                $("#map").hide();
                 $("#weatherData").html("<h1>Oops!</h1><p>It looks like we had an error reaching our sources. Please try again.</p>");
                 return callback(fips.errorMessage.toString());
             }
@@ -100,13 +104,14 @@ var getWeatherAlerts = function(fips, callback){
                       {fips : fips},
         function (alertsData){
         if("There are no active watches, warnings or advisories" == alertsData.alerts[0].title){
-            $("#weatherData").html("<h1>"+alertsData.alerts[0].feedTitle+"</h1><p>"+alertsData.alerts[0].title+"</p>");
+            $("#weatherData").html("<h4>"+alertsData.alerts[0].feedTitle+"</h4><div class=\"alert\"><p>"+alertsData.alerts[0].title+"</p></div>");
             return callback("No alerts");
         } else if(alertsData.errorMessage){
+            $("#map").hide();
             $("#weatherData").html("<h1>Oops!</h1><p>It looks like we had an error reaching our sources. Please try again.</p>");
             return callback(alertsData.errorMessage.toString());
         }
-        $("#weatherData").html("<h1>"+alertsData.alerts[0].feedTitle+"</h1>");
+        $("#weatherData").html("<h4>"+alertsData.alerts[0].feedTitle+"</h4>");
         return callback(null, alertsData);
         });
 };
@@ -119,9 +124,11 @@ var getWeatherAlertDetails = function(alertsData, callback){
         $.get('https://rc6wirove4.execute-api.us-east-1.amazonaws.com/stage/alertdetails',
               {url: alert.url.toString()},
               function(weatherData){
-                results += "<h3>" + weatherData.headline.toString() + "</h3>"; //start putting together alert display here
+                results += "<div class=\"alert\">"
+                results += "<h5>" + weatherData.headline.toString() + "</h5>"; //start putting together alert display here
                 results += "<p>" + weatherData.description.toString() + "/<p>";
                 results += "<p>" + weatherData.instructions.toString() + "</p>";
+                results += "</div>"
                 var phenomena = weatherData.phenomena.toString();
                 var color = "#A9A9A9"; //the default color is light grey
                 
@@ -173,17 +180,26 @@ var getWeatherAlertDetails = function(alertsData, callback){
 }
 
 </script>
-<link media="only screen and (max-device-width: 480px)" href="mobile.css" type="text/css" rel="stylesheet"   />
-<link rel="stylesheet" type="text/css" href="weather.css" media="only screen and (min-device-width: 481px)" />
+    <!-- Latest compiled and minified CSS -->
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
+<style>
+    #map {height: 300px}
+    .alert {
+        box-shadow: 7px 7px 3px #888888;
+    }
+</style>
 <link rel="apple-touch-icon" href="alert.png" />
 <link rel="shortcut icon" href="alert.ico" />
 <link rel="icon" href="alert.ico" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=2.0, user-scalable=yes" />
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
 </head>
 <body>
-<div id="map"></div>
-<div id="weatherData" style="display: block">
-<p id="loading">Retrieving weather alert data for your location....</p>
-</div>
+    <div class="container-fluid">
+        <div id="map"></div>
+        <div id="weatherData" style="display: block">
+        <p id="loading">Retrieving weather alert data for your location....</p>
+        </div>
+    </div>
 </body>
 </html>
