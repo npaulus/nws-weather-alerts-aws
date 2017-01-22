@@ -124,9 +124,16 @@ var getWeatherAlertDetails = function(alertsData, callback){
         $.get('https://rc6wirove4.execute-api.us-east-1.amazonaws.com/stage/alertdetails',
               {url: alert.url.toString()},
               function(weatherData){
+                console.log(JSON.stringify(weatherData))
+                console.log(weatherData.description)
                 results += "<div class=\"alert\">"
+                var formattedDescription = weatherData.description.toString()
+                    .replace(/\n/g, " ")
+                    .replace(/\*/g, "<br/><br/>*")
+                    .replace(/\.\.\.\s/g, "...<br/><br/>")
+                    .replace(/\.\s\.\.\./g, ".<br/><br/>...");
                 results += "<h5>" + weatherData.headline.toString() + "</h5>"; //start putting together alert display here
-                results += "<p>" + weatherData.description.toString() + "/<p>";
+                results += "<p>" + formattedDescription + "</p>";
                 results += "<p>" + weatherData.instructions.toString() + "</p>";
                 results += "</div>"
                 var phenomena = weatherData.phenomena.toString();
