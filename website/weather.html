@@ -79,11 +79,12 @@ function error(err){
 	" a mobile phone and share your location when prompted. Android users may need to have their phone location services set to enable High Accuracy. Error is \""+err.message+"\"</p>");
     console.log("Geolocation error is: ");
     console.log(err.message);
+    console.log(err);
                 
 }
     
 var getFipsCode = function(lat, lon, callback){
- $.get('https://rc6wirove4.execute-api.us-east-1.amazonaws.com/stage',
+ $.get('https://rc6wirove4.execute-api.us-east-1.amazonaws.com/stage/get-fips',
          {latitude : lat,
           longitude : lon},
          function (fips){       
