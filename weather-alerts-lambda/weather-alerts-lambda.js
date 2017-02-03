@@ -1,4 +1,3 @@
-var http = require('https');
 var fetch = require('node-fetch');
 var parseString = require('xml2js').parseString;
 
