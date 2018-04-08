@@ -7,10 +7,10 @@ exports.handler = function(event, context){
 	console.log(event.params.querystring.longitude.toString());
 	
 	var options = {
-    host : 'data.fcc.gov', // here only the domain name
+    host : 'geo.fcc.gov', // here only the domain name
     // (no http/https !)
     port : 443,
-    path : '/api/block/find?format=json&latitude='+event.params.querystring.latitude+'&longitude='+event.params.querystring.longitude, // the rest of the url with parameters if needed
+    path : '/api/census/block/find?format=json&latitude='+event.params.querystring.latitude+'&longitude='+event.params.querystring.longitude, // the rest of the url with parameters if needed
     method : 'GET' // do GET
     };
     console.log("Here is the path: " +options.path);
