@@ -1,0 +1,16 @@
+{
+  "name": "weather-alerts",
+  "version": "1.0.0",
+  "description": "Lambda function to retrieve weather alerts from the National Weather Service",
+  "main": "app.js",
+  "type": "module",
+  "scripts": {
+    "test": "echo \"No test specified\" && exit 0"
+  },
+  "engines": {
+    "node": ">=22"
+  },
+  "dependencies": {
+    "axios": "^1.6.7"
+  }
+}

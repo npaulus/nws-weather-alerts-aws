@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>NWS Weather Alerts</title>
+
+  <!-- Bootstrap 5 CSS -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
+
+  <!-- Bootstrap 5 JS Bundle for components (includes Popper) -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js" defer></script>
+
+  <!-- Your custom styles -->
+  <link rel="stylesheet" href="weather.css" />
+  <link rel="stylesheet" href="mobile.css" media="(max-width: 576px)" />
+
+  <!-- Favicons -->
+  <link rel="icon" href="alert.ico" />
+  <link rel="apple-touch-icon" href="alert.png" />
+</head>
+
+<body class="bg-light text-dark">
+  <div class="container-fluid p-3">
+    <div class="row">
+      <!-- Map Column -->
+      <div class="col-12 col-lg-6 mb-3">
+        <div id="map" style="width: 100%; height: 50vh;"></div>
+      </div>
+      <!-- Alerts Column -->
+      <div class="col-12 col-lg-6" id="weatherData">
+        <p id="loading" class="text-center">Retrieving weather alert data for your location…</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- External config -->
+  <script src="config.js"></script>
+
+  <!-- Google Maps & app logic as an ES module -->
+  <script type="module">
+    // Suppress specific WebGL warnings
+    const originalWarn = console.warn;
+    console.warn = (msg, ...args) => {
+      if (typeof msg === 'string' && /WEBGL_debug_renderer_info|Texture has not been initialized/.test(msg)) return;
+      originalWarn.call(console, msg, ...args);
+    };
+
+    // Intercept Maps CSP test to avoid CORS errors
+    const originalFetch = window.fetch.bind(window);
+    window.fetch = (input, init) => {
+      const url = typeof input === 'string' ? input : input.url;
+      if (url.includes('/mapsjs/gen_204?csp_test=')) {
+        return Promise.resolve(new Response(null, { status: 204 }));
+      }
+      return originalFetch(input, init);
+    };
+
+    import { Loader } from 'https://cdn.skypack.dev/@googlemaps/js-api-loader';
+
+    let map; // Global map reference
+    const loader = new Loader({
+      apiKey: '<YOUR API KEY>',
+      version: 'weekly',
+      libraries: ['marker']
+    });
+    const { baseUrl } = window.API_CONFIG;
+
+    // Entry point
+    initialize();
+
+    async function initialize() {
+      try {
+        const pos = await new Promise((res, rej) =>
+          navigator.geolocation.getCurrentPosition(res, rej, { maximumAge: 600000, timeout: 25000 })
+        );
+        const lat = pos.coords.latitude;
+        const lon = pos.coords.longitude;
+
+        await loader.load();
+        initializeMap(lat, lon);
+
+        const alerts = await fetchWeatherAlerts(lat, lon);
+        if (!alerts.length) return showNoAlerts();
+
+        showAlerts(alerts);
+      } catch (err) {
+        showError(err);
+      }
+    }
+
+    function initializeMap(lat, lon) {
+      const radarLayer = new google.maps.ImageMapType({
+        getTileUrl: (tile, zoom) =>
+          `https://mesonet.agron.iastate.edu/cache/tile.py/1.0.0/nexrad-n0q-900913/${zoom}/${tile.x}/${tile.y}.png?${Date.now()}`,
+        tileSize: new google.maps.Size(256, 256),
+        opacity: 0.3,
+        name: 'Radar'
+      });
+
+      const myPos = new google.maps.LatLng(lat, lon);
+      map = new google.maps.Map(document.getElementById('map'), {
+        center: myPos,
+        zoom: 10,
+        mapId: '<YOUR MAPID>'
+      });
+      map.overlayMapTypes.push(radarLayer);
+
+      new google.maps.marker.AdvancedMarkerElement({ position: myPos, map, title: 'Your Location' });
+    }
+
+    async function fetchWeatherAlerts(lat, lon) {
+      const resp = await fetch(
+        `${baseUrl}/weather-alerts?lat=${lat}&lon=${lon}`,
+        { headers: { Accept: 'application/geo+json' } }
+      );
+      if (!resp.ok) throw new Error(`Alerts fetch failed (${resp.status})`);
+      return resp.json();
+    }
+
+    function showNoAlerts() {
+      document.getElementById('weatherData').innerHTML = '<div class="alert alert-info">No active alerts.</div>';
+    }
+
+    function showAlerts(alerts) {
+      const container = document.getElementById('weatherData');
+      container.innerHTML = `<div class="accordion" id="alertsAccordion"></div>`;
+      const accordion = container.querySelector('#alertsAccordion');
+
+      alerts.forEach((alert, i) => {
+        const p = alert.properties;
+        const desc = p.description
+          .replace(/\n/g, ' ')
+          .replace(/\*/g, '<br/><br/>*')
+          .replace(/\.\.\.\s/g, '...<br/><br/>');
+
+        // Determine color based on phenomenon code parsed from VTEC
+        let color = '#A9A9A9';
+        const vtecRaw = p.parameters?.VTEC?.[0] || '';
+        const vtecParts = vtecRaw.split('.');
+        const phenom = vtecParts[2] || '';
+        if (phenom === 'FF') color = '#33FF33';
+        else if (phenom === 'SV') color = '#EEEE00';
+        else if (phenom === 'TO') color = '#FF0000';
+        else if (phenom === 'FL') color = '#32A532';
+
+        // Draw polygon if geometry exists
+        if (alert.geometry && alert.geometry.coordinates) {
+          const rings = normalizeCoordinates(alert.geometry);
+          rings.forEach(path => {
+            new google.maps.Polygon({
+              paths: path,
+              strokeColor: color,
+              strokeOpacity: 0.8,
+              strokeWeight: 2,
+              fillColor: color,
+              fillOpacity: 0.35,
+              map
+            });
+          });
+        }
+
+        // Create accordion item
+        const item = document.createElement('div');
+        item.className = 'accordion-item';
+        item.innerHTML = `
+          <h2 class="accordion-header" id="heading${i}">
+            <button class="accordion-button collapsed text-dark" type="button" data-bs-toggle="collapse" data-bs-target="#collapse${i}" aria-expanded="false" aria-controls="collapse${i}">
+              ${p.headline}
+            </button>
+          </h2>
+          <div id="collapse${i}" class="accordion-collapse collapse" aria-labelledby="heading${i}" data-bs-parent="#alertsAccordion">
+            <div class="accordion-body text-dark">
+              <p>${desc}</p>
+              <p>${p.instruction}</p>
+            </div>
+          </div>`;
+        accordion.appendChild(item);
+      });
+    }
+
+    // Normalize nested geometry coordinates to array of LatLngLiteral arrays
+    function normalizeCoordinates(geometry) {
+      const { type, coordinates } = geometry;
+      let rings = [];
+      if (type === 'Polygon') {
+        rings = [coordinates[0].map(pt => ({ lat: pt[1], lng: pt[0] }))];
+      } else if (type === 'MultiPolygon') {
+        rings = coordinates.map(poly => poly[0].map(pt => ({ lat: pt[1], lng: pt[0] })));
+      }
+      return rings;
+    }
+
+    function showError(err) {
+      document.getElementById('map').style.display = 'none';
+      document.getElementById('weatherData').innerHTML = `
+        <div class="alert alert-danger text-dark">
+          <h4>Oops!</h4>
+          <p>${err.message || err}</p>
+        </div>`;
+      console.error(err);
+    }
+  </script>
+</body>
+</html>
