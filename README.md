@@ -21,6 +21,7 @@ It uses the following:
 * AWS S3 - static website hosting
 * AWS CloudFront
 * AWS Certificate Manager
+* AWS Serverless Application Model (SAM)
 
 How it works
 ------------
@@ -40,3 +41,4 @@ Roadmap
 * Replace "Retrieving weather info...." message with spinner to indicate page is loading
 * Add color coded "boxing" around alerts to make it easier to determine which alert goes with which polygon
 * Updated to use a single AWS Lambda to a single NWS API Call (Added 5/26/2025)
+* Updated to use AWS Serverless Application Model (SAM) (Added 5/26/2025)
