@@ -1,0 +1,36 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: NWS Weather Alerts - Lambda Functions with CORS via API Gateway
+
+Resources:
+  WeatherApi:
+    Type: AWS::Serverless::Api
+    Properties:
+      Name: WeatherAlertsApi
+      StageName: Prod
+      Cors:
+        AllowOrigin: "'https://alerts.vtmnts.com'"
+        AllowMethods: "'OPTIONS,GET'"
+        AllowHeaders: "'Content-Type,Accept'"
+        MaxAge: 600
+
+  WeatherAlertsFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: lambdas/weather-alerts/
+      Handler: app.handler
+      Runtime: nodejs22.x
+      Timeout: 10
+      MemorySize: 128
+      Events:
+        GetWeatherAlerts:
+          Type: Api
+          Properties:
+            RestApiId: !Ref WeatherApi
+            Path: /weather-alerts
+            Method: GET
+
+Outputs:
+  WeatherAlertsApiEndpoint:
+    Description: "Weather Alerts API endpoint"
+    Value: !Sub "https://${WeatherApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/weather-alerts"

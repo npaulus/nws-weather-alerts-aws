@@ -1,33 +1,33 @@
 @CHARSET "UTF-8";
 
 body {
-	background-color: black;
+	background-color: white;
 }
 
 #weatherData {
 	max-width: 960px;
-	background: black;
+	background: white;
 }
 
 #map {
 	width: 960px;
 	height: 400px;
-	background: black;
+	background: white;
 }
 
 
 h1 {
 	font-size: 22px;
-	color: #00FF00;
+	color: black;
 }
 
 h3 {
 	font-size: 18px;
-	color: #00FF00;
+	color: black;
 }
 
 p {
 	font-size: 16px;
 	font-family: monospace;
-	color: #00FF00;
+	color: black;
 }
